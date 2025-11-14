@@ -2,9 +2,35 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { generateSpeech } from '../services/geminiService';
 import { decode, decodeAudioData } from '../utils/audio';
-import { LoadingSpinner, PlayIcon, PauseIcon, StopIcon, ArrowLeftIcon, ArrowRightIcon } from '../components/icons/AudioIcons';
+import { LoadingSpinner, PlayIcon, PauseIcon, StopIcon, ArrowLeftIcon, ArrowRightIcon, CheckIcon } from '../components/icons/AudioIcons';
 import { courses } from '../data/lessons';
 import AIAssistant from '../components/AIAssistant';
+
+const PROGRESS_KEY = 'blockCodeProgress';
+
+interface ProgressData {
+  [courseId: string]: number;
+}
+
+const getProgress = (): ProgressData => {
+  try {
+    const savedProgress = window.localStorage.getItem(PROGRESS_KEY);
+    return savedProgress ? JSON.parse(savedProgress) : {};
+  } catch (error) {
+    console.error("Failed to load progress from localStorage", error);
+    return {};
+  }
+};
+
+const saveProgressForCourse = (courseId: string, lessonIndex: number): void => {
+  try {
+    const currentProgress = getProgress();
+    currentProgress[courseId] = lessonIndex;
+    window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(currentProgress));
+  } catch (error) {
+    console.error("Failed to save progress to localStorage", error);
+  }
+};
 
 interface LessonPageProps {
   courseId: string;
@@ -14,7 +40,10 @@ const LessonPage: React.FC<LessonPageProps> = ({ courseId }) => {
   const course = courses[courseId as keyof typeof courses];
   const lessons = course.lessons;
 
-  const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+  const [currentLessonIndex, setCurrentLessonIndex] = useState(() => {
+    const progress = getProgress();
+    return progress[courseId] || 0;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,8 +52,8 @@ const LessonPage: React.FC<LessonPageProps> = ({ courseId }) => {
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
 
   useEffect(() => {
-    // Redefine para a primeira lição quando o curso muda
-    setCurrentLessonIndex(0);
+    const progress = getProgress();
+    setCurrentLessonIndex(progress[courseId] || 0);
     stopAudio();
   }, [courseId]);
 
@@ -93,6 +122,7 @@ const LessonPage: React.FC<LessonPageProps> = ({ courseId }) => {
     stopAudio();
     if (index >= 0 && index < lessons.length) {
       setCurrentLessonIndex(index);
+      saveProgressForCourse(courseId, index);
     }
   };
 
@@ -125,13 +155,18 @@ const LessonPage: React.FC<LessonPageProps> = ({ courseId }) => {
               <li key={index} className="mb-2">
                 <button
                   onClick={() => goToLesson(index)}
-                  className={`w-full text-left px-4 py-2 rounded-md transition-all duration-300 ${
+                  className={`w-full text-left px-4 py-2 rounded-md transition-all duration-300 flex items-center justify-between ${
                     currentLessonIndex === index
                       ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold shadow-md'
+                      : index < currentLessonIndex
+                      ? 'text-gray-500 hover:bg-gray-800'
                       : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                   }`}
                 >
-                  {lesson.title}
+                  <span className={index < currentLessonIndex ? 'line-through' : ''}>
+                    {lesson.title}
+                  </span>
+                  {index < currentLessonIndex && <CheckIcon />}
                 </button>
               </li>
             ))}

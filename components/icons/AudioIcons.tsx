@@ -50,3 +50,9 @@ export const SparklesIcon: React.FC = () => (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m1-12a1 1 0 011 1v2a1 1 0 01-2 0V6a1 1 0 011-1zm5 5a1 1 0 011 1v2a1 1 0 01-2 0v-2a1 1 0 011-1zm-3 8a1 1 0 011 1v2a1 1 0 01-2 0v-2a1 1 0 011-1zm10-5a1 1 0 011 1v2a1 1 0 01-2 0v-2a1 1 0 011-1z" />
     </svg>
 );
+
+export const CheckIcon: React.FC = () => (
+    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+);
